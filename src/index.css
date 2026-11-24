@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/space-grotesk';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+  --color-ink: #0b0e14;
+  --color-panel: rgb(14 17 24 / 0.78);
+  --color-line: rgb(255 255 255 / 0.09);
+  --color-mint: #7cf0b4;
+  --color-muted: #9aa3b2;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0b0e14;
+  color: #f4f6fa;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+canvas {
+  touch-action: none;
+}
+
+@utility glass {
+  background: var(--color-panel);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--color-line);
+  box-shadow:
+    0 10px 40px -12px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
