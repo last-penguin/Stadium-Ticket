@@ -3,8 +3,8 @@ import * as THREE from 'three'
 import type { ThreeEvent } from '@react-three/fiber'
 import { getSeat as venueSeat, useStore, venueModel } from '../state/store'
 import type { Sector } from '../venue/types'
-import { isCinema, LIVERY } from '../venue/models'
-import { cinemaSeatGeometry, seatGeometry, spectatorGeometry } from './geometry'
+import { isAircraft, isCinema, LIVERY } from '../venue/models'
+import { airlineSeatGeometry, cinemaSeatGeometry, seatGeometry, spectatorGeometry, suiteGeometry } from './geometry'
 
 const tmp = new THREE.Object3D()
 const col = new THREE.Color()
@@ -89,10 +89,23 @@ function widthScale(sector: Sector) {
 export function Seats() {
   const sectors = venueModel.venue.sectors
   const meshes = useRef<(THREE.InstancedMesh | null)[]>([])
-  const geometry = useMemo(
-    () => (venueModel.venue.kind === 'cinema' ? cinemaSeatGeometry() : seatGeometry(0.48)),
-    [],
-  )
+  // One geometry per seat style (aircraft cabins differ: suites vs economy).
+  const geometryFor = useMemo(() => {
+    const cache = new Map<string, THREE.BufferGeometry>()
+    return (sector: Sector) => {
+      const m = venueModel
+      let key = m.venue.kind as string
+      let make = () => (m.venue.kind === 'cinema' ? cinemaSeatGeometry() : seatGeometry(0.48))
+      if (isAircraft(m)) {
+        const cabin = m.config.cabins[sector.ringIndex]
+        key = `air-${cabin.suite}-${cabin.seatWidthIn}`
+        make = () => (cabin.suite ? suiteGeometry(cabin.seatWidthIn * 0.0254) : airlineSeatGeometry(cabin.seatWidthIn * 0.0254))
+      }
+      let g = cache.get(key)
+      if (!g) cache.set(key, (g = make()))
+      return g
+    }
+  }, [])
   const material = useMemo(() => new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05 }), [])
 
   // Place every seat once.
@@ -189,7 +202,7 @@ export function Seats() {
           ref={(m) => {
             meshes.current[i] = m
           }}
-          args={[geometry, material, sector.seats.length]}
+          args={[geometryFor(sector), material, sector.seats.length]}
           receiveShadow
           {...handlers(sector)}
         />
@@ -214,7 +227,7 @@ function Spectators() {
     const mesh = ref.current
     if (!mesh) return
     const shirts =
-      venueModel.venue.kind === 'cinema'
+      venueModel.venue.kind !== 'stadium'
         ? ['#2b2f3a', '#3a3f4d', '#5b4636', '#1e3a5f', '#6b2b35', '#d9d4c7', '#3f5a45']
         : ['#1f9d55', '#1f9d55', '#18834a', '#f4f4f0', '#2a7de1', '#1b1f2a', '#e8c547']
     seats.forEach((seat, i) => {

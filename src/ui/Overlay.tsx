@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Link } from 'react-router'
-import { ArrowLeft, CalendarDays, MapPin, ScanLine, Ticket } from 'lucide-react'
+import { ArrowLeft, CalendarDays, MapPin, Moon, ScanLine, Sun, Ticket } from 'lucide-react'
 import { startLive } from '../services/live'
 import { Checkout } from './Checkout'
 import { CompareTray, CompareView } from './Compare'
@@ -108,9 +108,12 @@ function TopBar() {
             Demo
           </div>
         </div>
-        <div className="hidden gap-2 sm:flex">
-          <NavPill to="/tickets" icon={<Ticket size={13} />} label="My tickets" />
+        <div className="flex gap-2">
+          <DayNightToggle />
+          <div className="hidden gap-2 sm:flex">
+            <NavPill to="/tickets" icon={<Ticket size={13} />} label="My tickets" />
           <NavPill to="/scan" icon={<ScanLine size={13} />} label="Gate scanner" />
+          </div>
         </div>
       </div>
       {/* phones: tier switcher on its own row */}
@@ -135,6 +138,23 @@ function NavPill({ to, icon, label }: { to: string; icon: React.ReactNode; label
     <Link to={to} className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium text-white/85 hover:text-white">
       {icon} {label}
     </Link>
+  )
+}
+
+/** Day / night switch for stadiums (floodlit evening match vs daylight). */
+function DayNightToggle() {
+  const night = useStore((s) => s.night)
+  const toggle = useStore((s) => s.toggleNight)
+  if (venueModel.venue.kind !== 'stadium') return null
+  return (
+    <button
+      onClick={toggle}
+      aria-label={night ? 'Switch to day' : 'Switch to night'}
+      title={night ? 'Switch to day' : 'Switch to night (floodlights)'}
+      className="glass flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium text-white/85 hover:text-white"
+    >
+      {night ? <Sun size={13} /> : <Moon size={13} />} {night ? 'Day' : 'Night'}
+    </button>
   )
 }
 

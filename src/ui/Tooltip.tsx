@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { Accessibility } from 'lucide-react'
 import { getSeat, getSector, tierOf, useStore, venueModel } from '../state/store'
-import { formatPrice } from '../venue/format'
+import { formatPrice, seatName } from '../venue/format'
 import { sectorAvailability } from '../venue/metrics'
 
 /** Floating label that follows the cursor over stands and seats. */
@@ -49,7 +49,7 @@ export function Tooltip() {
       <div className="flex items-center gap-4">
         <div>
           <div className="font-display text-[14px] font-semibold tabular">
-            Row {hoveredSeat.rowLabel} · Seat {hoveredSeat.number}
+            {seatName(hoveredSeat).replace(', ', ' · ')}
           </div>
           <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted">
             {hoveredSeat.accessible && <Accessibility size={12} className="text-[#b9a4ff]" />}

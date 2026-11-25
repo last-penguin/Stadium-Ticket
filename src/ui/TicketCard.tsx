@@ -26,7 +26,7 @@ export function TicketCard({ ticket, status }: { ticket: Ticket; status?: { used
     <div className="relative overflow-hidden rounded-3xl bg-[#f6f7f9] text-ink shadow-2xl">
       <div className="bg-ink px-5 pb-4 pt-5 text-white">
         <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
-          <span>SeatView ticket</span>
+          <span>{ticket.seatLabel ? 'Boarding pass' : 'SeatView ticket'}</span>
           <span className={used ? 'text-amber-300' : 'text-mint'}>{used ? 'Used' : 'Valid'}</span>
         </div>
         <div className="mt-2 font-display text-lg font-semibold leading-tight">{ticket.eventTitle}</div>
@@ -45,12 +45,20 @@ export function TicketCard({ ticket, status }: { ticket: Ticket; status?: { used
         <div className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-ink/90" />
       </div>
       <div className="grid grid-cols-4 gap-2 px-5 pt-5 text-center">
-        {[
-          [/^\d+$/.test(ticket.seatId.split('-')[0]) ? 'Sector' : 'Block', ticket.seatId.split('-')[0]],
-          ['Row', String(ticket.row)],
-          ['Seat', String(ticket.seat)],
-          ['Tier', ticket.ringName.split(' ')[0]],
-        ].map(([k, v]) => (
+        {(ticket.seatLabel
+          ? [
+              ['Seat', ticket.seatLabel],
+              ['Row', String(ticket.row)],
+              ['Class', ticket.ringName],
+              ['Zone', ticket.sectorLabel.split(' · ')[1] ?? '—'],
+            ]
+          : [
+              [/^\d+$/.test(ticket.seatId.split('-')[0]) ? 'Sector' : 'Block', ticket.seatId.split('-')[0]],
+              ['Row', String(ticket.row)],
+              ['Seat', String(ticket.seat)],
+              ['Tier', ticket.ringName.split(' ')[0]],
+            ]
+        ).map(([k, v]) => (
           <div key={k}>
             <div className="text-[10px] uppercase tracking-[0.14em] text-ink/50">{k}</div>
             <div className="font-display text-xl font-semibold tabular">{v}</div>

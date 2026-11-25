@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'motion/react'
-import { ArrowRight, CalendarDays, Clapperboard, Columns3, Eye, MapPin, QrCode, Trophy, Zap } from 'lucide-react'
+import { ArrowRight, CalendarDays, Clapperboard, Columns3, Eye, MapPin, Plane, QrCode, Trophy, Zap } from 'lucide-react'
 import { catalog, formatEventDate, type EventRecord } from '../services/catalog'
 import { formatPrice } from '../venue/format'
 import { statsFor } from './eventStats'
@@ -13,6 +13,7 @@ const CATEGORY_STYLE: Record<string, { from: string; to: string; icon: React.Rea
   Movie: { from: '#3a1450', to: '#141a4a', icon: <Clapperboard size={18} /> },
   Concert: { from: '#7a1f4a', to: '#1b1f4a', icon: <Zap size={18} /> },
   Theatre: { from: '#6b3a12', to: '#2a1430', icon: <Clapperboard size={18} /> },
+  Flight: { from: '#1f5fae', to: '#0f2244', icon: <Plane size={18} /> },
 }
 
 function useEvents() {
@@ -38,7 +39,16 @@ function EventCard({ event, i }: { event: EventRecord; i: number }) {
       >
         <div className="relative h-36 overflow-hidden" style={{ background: `linear-gradient(135deg, ${style.from}, ${style.to})` }}>
           <div className="absolute inset-0 opacity-30 [background:radial-gradient(circle_at_80%_20%,white,transparent_40%)]" />
-          {venue.kind === 'stadium' ? (
+          {venue.kind === 'aircraft' ? (
+            <svg viewBox="0 0 200 120" className="absolute -bottom-3 right-0 h-40 opacity-85">
+              <rect x="40" y="52" width="140" height="18" rx="9" fill="rgba(255,255,255,.6)" />
+              <path d="M 120 58 L 92 10 L 80 10 L 96 58 Z M 120 64 L 92 112 L 80 112 L 96 64 Z" fill="rgba(255,255,255,.35)" />
+              <path d="M 52 56 L 40 36 L 33 36 L 40 58 Z" fill="rgba(124,240,180,.6)" />
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <rect key={i} x={70 + i * 11} y="56" width="5" height="10" rx="1.5" fill="rgba(31,95,174,.8)" />
+              ))}
+            </svg>
+          ) : venue.kind === 'stadium' ? (
             <svg viewBox="0 0 200 120" className="absolute -bottom-6 right-0 h-40 opacity-80">
               <ellipse cx="110" cy="70" rx="80" ry="44" fill="none" stroke="rgba(255,255,255,.35)" strokeWidth="10" />
               <ellipse cx="110" cy="70" rx="58" ry="30" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="8" />
@@ -94,13 +104,13 @@ export function HomePage() {
   return (
     <Shell>
       <section className="py-6 sm:py-10">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mint">Stadiums · Cinemas · Theatres</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mint">Stadiums · Cinemas · Flights</div>
         <h1 className="mt-3 max-w-2xl font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
           See your seat <span className="text-mint">before</span> you buy it.
         </h1>
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
-          Explore the venue in 3D, sit in any seat to check the real view, compare a few seats side by side, and book
-          with a ticket that can't be copied.
+          Explore the venue in 3D (a stadium, a cinema or even a plane), sit in any seat to check the real view,
+          compare a few seats side by side, and book with a ticket that can't be copied.
         </p>
         <div className="mt-6 flex flex-wrap gap-2 text-[12px] text-white/80">
           {[

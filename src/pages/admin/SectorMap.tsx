@@ -113,6 +113,17 @@ export function SectorMap({
       ctx.moveTo((x0 + x1) / 2, y0)
       ctx.lineTo((x0 + x1) / 2, y1)
       ctx.stroke()
+    } else if (model.venue.kind === 'aircraft') {
+      // fuselage outline
+      const xs = model.venue.sectors.flatMap((s) => s.seats.map((x) => x.position[0]))
+      const [x0, y0] = toPx(Math.min(...xs) - 2, -3)
+      const [x1, y1] = toPx(Math.max(...xs) + 2, 3)
+      const r = (y1 - y0) / 2
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.roundRect(x0 - r, y0, x1 - x0 + r * 2.6, y1 - y0, [r, r * 1.6, r * 1.6, r])
+      ctx.stroke()
     } else if (model.venue.focus.screen) {
       const sc = model.venue.focus.screen
       const [x0, y] = toPx(-sc.width / 2, sc.center[2])

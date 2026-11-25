@@ -6,7 +6,7 @@ import { CheckCircle2, CreditCard, Loader2, Lock, Timer, X } from 'lucide-react'
 import { announce, backend, holderId } from '../services/live'
 import type { Ticket } from '../services/tickets'
 import { currentEvent, getSeat, getSector, tierOf, useStore, venueModel } from '../state/store'
-import { formatPrice } from '../venue/format'
+import { formatPrice, seatName } from '../venue/format'
 import { formatEventDate } from '../services/catalog'
 import { TicketCard } from './TicketCard'
 
@@ -98,6 +98,7 @@ export function Checkout() {
         ringName: ring.name,
         row: seat.rowLabel,
         seat: seat.number,
+        seatLabel: seat.label,
         price: tier.price + serviceFee(tier.price),
       },
     )
@@ -188,7 +189,7 @@ export function Checkout() {
                       {tier.name} · {sector.standName}
                     </div>
                     <div className="font-display text-[17px] font-semibold tabular">
-                      {sector.label}, Row {seat.rowLabel}, Seat {seat.number}
+                      {sector.label}, {seatName(seat)}
                     </div>
                     <div className="text-[12px] text-muted">
                       {currentEvent.title} · {formatEventDate(currentEvent)}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Building2, Clapperboard, Eye, Minus, Plus, RotateCcw, Save } from 'lucide-react'
 import { catalog, type VenueRecord } from '../../services/catalog'
+import type { AircraftConfig } from '../../venue/aircraft'
 import { GALAXY_CONFIG, type CinemaConfig } from '../../venue/cinema'
 import { buildVenue } from '../../venue/models'
 import { AURORA_CONFIG, type StadiumConfig } from '../../venue/stadium'
@@ -177,6 +178,58 @@ function CinemaEditor({ cfg, set }: { cfg: CinemaConfig; set: (c: CinemaConfig) 
   )
 }
 
+function AircraftEditor({ cfg, set }: { cfg: AircraftConfig; set: (c: AircraftConfig) => void }) {
+  const cab = (i: number, patch: Partial<AircraftConfig['cabins'][number]>) =>
+    set({ ...cfg, cabins: cfg.cabins.map((c, j) => (j === i ? { ...c, ...patch } : c)) })
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="mb-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-muted">Cabins (front to back)</div>
+        <div className="space-y-2">
+          <div className="grid grid-cols-[1.1fr_0.9fr_0.7fr_0.9fr_0.9fr_1fr] gap-2 text-[10px] uppercase tracking-[0.12em] text-muted">
+            <span>Name</span>
+            <span>Layout</span>
+            <span>Rows</span>
+            <span>Pitch (in)</span>
+            <span>Width (in)</span>
+            <span>Exit rows</span>
+          </div>
+          {cfg.cabins.map((c, i) => (
+            <div key={i} className="grid grid-cols-[1.1fr_0.9fr_0.7fr_0.9fr_0.9fr_1fr] gap-2">
+              <input value={c.name} onChange={(e) => cab(i, { name: e.target.value, shortName: e.target.value })} className={inputCls} />
+              <input
+                defaultValue={c.layout}
+                onBlur={(e) => /^\d+(-\d+)*$/.test(e.target.value.trim()) && cab(i, { layout: e.target.value.trim() })}
+                className={inputCls}
+                placeholder="3-3-3"
+              />
+              <NumberInput value={c.rows} min={1} max={45} onChange={(v) => cab(i, { rows: v })} />
+              <NumberInput value={c.pitchIn} min={28} max={90} onChange={(v) => cab(i, { pitchIn: v })} />
+              <NumberInput value={c.seatWidthIn} min={16} max={32} step={0.5} onChange={(v) => cab(i, { seatWidthIn: v })} />
+              <input
+                defaultValue={c.exitRows.join(', ')}
+                onBlur={(e) =>
+                  cab(i, {
+                    exitRows: e.target.value
+                      .split(',')
+                      .map((x) => parseInt(x.trim(), 10))
+                      .filter((n) => n > 0),
+                  })
+                }
+                className={inputCls}
+                placeholder="26, 27"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 text-[11px] text-muted">
+          Seat pitch is the distance from your seat to the one in front. Exit rows get extra legroom and their own price tier.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function VenuesTab() {
   const navigate = useNavigate()
   const venues = catalog.venues()
@@ -263,8 +316,10 @@ export function VenuesTab() {
           </div>
           {draft.kind === 'stadium' ? (
             <StadiumEditor cfg={draft.layout} set={(layout) => setDraft({ ...draft, layout })} />
-          ) : (
+          ) : draft.kind === 'cinema' ? (
             <CinemaEditor cfg={draft.layout} set={(layout) => setDraft({ ...draft, layout })} />
+          ) : (
+            <AircraftEditor cfg={draft.layout} set={(layout) => setDraft({ ...draft, layout })} />
           )}
           <div>
             <div className="mb-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-muted">Price tiers</div>

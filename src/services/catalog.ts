@@ -1,6 +1,7 @@
 // Venues and events managed from the admin dashboard. Stored as plain JSON
 // (localStorage today; a database table later) and shared live between tabs.
 
+import { SKYLINER_CONFIG } from '../venue/aircraft'
 import { GALAXY_CONFIG } from '../venue/cinema'
 import { buildVenue, type VenueLayout, type VenueModel } from '../venue/models'
 import { AURORA_CONFIG } from '../venue/stadium'
@@ -8,7 +9,7 @@ import { browserKV, readJSON, type KV } from './infra'
 
 export type VenueRecord = VenueLayout & { id: string; updatedAt: number }
 
-export type EventCategory = 'Football' | 'Cricket' | 'Movie' | 'Concert' | 'Theatre'
+export type EventCategory = 'Football' | 'Cricket' | 'Movie' | 'Concert' | 'Theatre' | 'Flight'
 
 export interface EventRecord {
   id: string
@@ -38,6 +39,7 @@ export function seedCatalog(): CatalogData {
     venues: [
       { id: AURORA_CONFIG.id, kind: 'stadium', layout: structuredClone(AURORA_CONFIG), updatedAt: t },
       { id: GALAXY_CONFIG.id, kind: 'cinema', layout: structuredClone(GALAXY_CONFIG), updatedAt: t },
+      { id: SKYLINER_CONFIG.id, kind: 'aircraft', layout: structuredClone(SKYLINER_CONFIG), updatedAt: t },
     ],
     events: [
       {
@@ -60,6 +62,17 @@ export function seedCatalog(): CatalogData {
         date: '2026-12-18',
         time: '21:30',
         prices: { recliner: 2800, premium: 1800, classic: 1100 },
+        status: 'on-sale',
+      },
+      {
+        id: 'evt-flight-sv785',
+        venueId: 'skyliner-1',
+        title: 'Lahore → London',
+        subtitle: 'Flight SV 785 · Wide-body · 8h 40m',
+        category: 'Flight',
+        date: '2026-12-20',
+        time: '02:45',
+        prices: { first: 520000, extra: 182000, economy: 148000 },
         status: 'on-sale',
       },
       {
@@ -96,7 +109,15 @@ export class Catalog {
 
   private data(): CatalogData {
     const d = readJSON<CatalogData | null>(this.kv, KEY, null)
-    return d && Array.isArray(d.venues) && Array.isArray(d.events) ? d : seedCatalog()
+    if (!d || !Array.isArray(d.venues) || !Array.isArray(d.events)) return seedCatalog()
+    // add demo venues/events introduced after this catalog was saved
+    const seed = seedCatalog()
+    const seen = readJSON<string[]>(this.kv, `${KEY}:seeded`, [])
+    for (const v of seed.venues)
+      if (!d.venues.some((x) => x.id === v.id) && !seen.includes(v.id)) d.venues.push(v)
+    for (const e of seed.events)
+      if (!d.events.some((x) => x.id === e.id) && !seen.includes(e.id)) d.events.push(e)
+    return d
   }
 
   private write(d: CatalogData) {
@@ -146,6 +167,9 @@ export class Catalog {
   }
 
   deleteEvent(id: string) {
+    // remember deleted demo events so they are not re-added
+    const seen = readJSON<string[]>(this.kv, `${KEY}:seeded`, [])
+    this.kv.set(`${KEY}:seeded`, JSON.stringify([...seen, id]))
     const d = this.data()
     d.events = d.events.filter((e) => e.id !== id)
     this.write(d)

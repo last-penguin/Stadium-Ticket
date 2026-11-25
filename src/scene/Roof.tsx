@@ -63,7 +63,8 @@ export function Roof() {
     material.opacity = THREE.MathUtils.damp(material.opacity, target, 4, dt)
     const show = material.opacity > 0.02
     if (shellRef.current) shellRef.current.visible = show
-    if (stripRef.current) stripRef.current.visible = show
+    // at night the floodlight ring on the roof edge is always lit
+    if (stripRef.current) stripRef.current.visible = show || useStore.getState().night
     const solid = material.opacity > 0.95
     if (material.depthWrite !== solid) {
       material.depthWrite = solid

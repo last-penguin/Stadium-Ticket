@@ -18,7 +18,29 @@ function mulberry32(seed: number) {
 const ROAD_HALF = 9
 
 /** Ground, plaza, roads, a park of trees and a low city skyline. */
-export function Surroundings() {
+/** Window grid for buildings; at night it becomes the lit-windows glow. */
+function windowTexture() {
+  const c = document.createElement('canvas')
+  c.width = 64
+  c.height = 128
+  const ctx = c.getContext('2d')!
+  ctx.fillStyle = '#000000'
+  ctx.fillRect(0, 0, 64, 128)
+  let seed = 3
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+  for (let y = 4; y < 124; y += 10)
+    for (let x = 4; x < 60; x += 10) {
+      const lit = rnd() < 0.45
+      ctx.fillStyle = lit ? (rnd() < 0.7 ? '#ffd9a0' : '#cfe3ff') : '#000000'
+      ctx.fillRect(x, y, 6, 6)
+    }
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.magFilter = THREE.NearestFilter
+  return t
+}
+
+export function Surroundings({ night = false }: { night?: boolean }) {
   const { config, outerD } = (venueModel as StadiumModel)
   const { hx, hz, r } = config.shape
   const plazaEnd = outerD + 34
@@ -86,6 +108,41 @@ export function Surroundings() {
   const trunkRef = useRef<THREE.InstancedMesh>(null)
   const crownRef = useRef<THREE.InstancedMesh>(null)
   const buildRef = useRef<THREE.InstancedMesh>(null)
+  const windows = useMemo(() => windowTexture(), [])
+
+  // street lights along both edges of the ring road and the approach roads
+  const lampRef = useRef<THREE.InstancedMesh>(null)
+  const lamps = useMemo(() => {
+    const out: [number, number, number][] = []
+    const bowl = (venueModel as StadiumModel).bowl
+    for (const d of [roadIn - 1, roadOut + 1]) for (let i = 0; i < 90; i++) {
+      const p = bowl.point(i / 90, d)
+      if (!onRoad(p.x, p.z, 1)) out.push([p.x, 6, p.z])
+    }
+    for (let k = 0; k < 4; k++) {
+      const start = (k % 2 === 0 ? hx : hz) + roadOut + 8
+      for (let t = start; t < 1100; t += 30)
+        for (const side of [-1, 1]) {
+          const a = (k * Math.PI) / 2
+          const x = Math.cos(a) * t - Math.sin(a) * side * (ROAD_HALF + 1.5)
+          const z = Math.sin(a) * t + Math.cos(a) * side * (ROAD_HALF + 1.5)
+          out.push([x, 6, -z])
+        }
+    }
+    return out
+  }, [roadIn, roadOut, hx, hz]) // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    const mesh = lampRef.current
+    if (!mesh) return
+    const o = new THREE.Object3D()
+    lamps.forEach((p, i) => {
+      o.position.set(...p)
+      o.updateMatrix()
+      mesh.setMatrixAt(i, o.matrix)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.computeBoundingSphere()
+  }, [lamps, night])
 
   useLayoutEffect(() => {
     const o = new THREE.Object3D()
@@ -126,15 +183,21 @@ export function Surroundings() {
   const roadLen = 2400
   return (
     <group raycast={() => {}}>
+      {night && (
+        <instancedMesh ref={lampRef} args={[undefined, undefined, lamps.length]} raycast={() => {}}>
+          <sphereGeometry args={[0.7, 8, 6]} />
+          <meshBasicMaterial color="#ffd28a" toneMapped={false} />
+        </instancedMesh>
+      )}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow raycast={() => {}}>
         <planeGeometry args={[6000, 6000]} />
-        <meshStandardMaterial color="#9bb487" roughness={1} />
+        <meshStandardMaterial color={night ? '#1c2619' : '#9bb487'} roughness={1} />
       </mesh>
       <mesh geometry={plaza} position={[0, 0.0, 0]} receiveShadow raycast={() => {}}>
-        <meshStandardMaterial color="#dcd8cf" roughness={0.95} />
+        <meshStandardMaterial color={night ? '#3b3f47' : '#dcd8cf'} roughness={0.95} />
       </mesh>
       <mesh geometry={ringRoad} position={[0, 0.03, 0]} receiveShadow raycast={() => {}}>
-        <meshStandardMaterial color="#555b66" roughness={0.9} />
+        <meshStandardMaterial color={night ? '#1d2027' : '#555b66'} roughness={0.9} />
       </mesh>
       <mesh geometry={ringLine} position={[0, 0.05, 0]} raycast={() => {}}>
         <meshStandardMaterial color="#f5f2e8" roughness={0.8} />
@@ -146,7 +209,7 @@ export function Surroundings() {
           <group key={k} rotation={[0, (k * Math.PI) / 2, 0]}>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[start + len / 2, 0.02, 0]} receiveShadow raycast={() => {}}>
               <planeGeometry args={[len, ROAD_HALF * 2]} />
-              <meshStandardMaterial color="#555b66" roughness={0.9} />
+              <meshStandardMaterial color={night ? '#1d2027' : '#555b66'} roughness={0.9} />
             </mesh>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[start + len / 2 + 8, 0.04, 0]} raycast={() => {}}>
               <planeGeometry args={[len - 16, 0.3]} />
@@ -165,7 +228,13 @@ export function Surroundings() {
       </instancedMesh>
       <instancedMesh ref={buildRef} args={[undefined, undefined, buildings.length]} castShadow receiveShadow raycast={() => {}}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial roughness={0.85} />
+        <meshStandardMaterial
+          roughness={0.85}
+          color={night ? '#4a5162' : '#ffffff'}
+          emissive={night ? '#ffffff' : '#000000'}
+          emissiveMap={night ? windows : null}
+          emissiveIntensity={night ? 1.1 : 0}
+        />
       </instancedMesh>
     </group>
   )

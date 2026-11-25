@@ -17,6 +17,7 @@ interface LogEntry {
 
 const seatText = (seatId: string) => {
   const [sector, row, seat] = seatId.split('-')
+  if (/^[A-Z]$/.test(seat)) return `Seat ${row}${seat} · ${sector}`
   return `${/^\d+$/.test(sector) ? 'Sector ' : 'Block '}${sector} · Row ${row} · Seat ${seat}`
 }
 const time = (ms: number) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })

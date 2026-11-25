@@ -5,7 +5,7 @@ import { catalog, formatEventDate, type EventCategory, type EventRecord } from '
 import { formatPrice } from '../../venue/format'
 import { Field, inputCls, NumberInput } from './ui'
 
-const CATEGORIES: EventCategory[] = ['Football', 'Cricket', 'Movie', 'Concert', 'Theatre']
+const CATEGORIES: EventCategory[] = ['Football', 'Cricket', 'Movie', 'Concert', 'Theatre', 'Flight']
 
 function blankEvent(): EventRecord {
   const v = catalog.venues()[0]
@@ -14,7 +14,7 @@ function blankEvent(): EventRecord {
     venueId: v.id,
     title: '',
     subtitle: '',
-    category: v.kind === 'cinema' ? 'Movie' : 'Football',
+    category: v.kind === 'cinema' ? 'Movie' : v.kind === 'aircraft' ? 'Flight' : 'Football',
     date: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
     time: '20:00',
     prices: Object.fromEntries(v.layout.tiers.map((t) => [t.id, t.price])),
@@ -33,7 +33,7 @@ function EventEditor({ initial, onClose }: { initial: EventRecord; onClose: () =
     setE((x) => ({
       ...x,
       venueId: id,
-      category: v.kind === 'cinema' ? 'Movie' : x.category === 'Movie' ? 'Football' : x.category,
+      category: v.kind === 'cinema' ? 'Movie' : v.kind === 'aircraft' ? 'Flight' : x.category === 'Movie' || x.category === 'Flight' ? 'Football' : x.category,
       prices: Object.fromEntries(v.layout.tiers.map((t) => [t.id, x.prices[t.id] ?? t.price])),
     }))
   }

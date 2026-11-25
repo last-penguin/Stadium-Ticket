@@ -38,6 +38,8 @@ export interface Ticket {
   ringName: string
   row: string
   seat: number
+  /** Short seat name, e.g. "23A" on a plane. */
+  seatLabel?: string
   price: number
   holderName: string
   holderEmail: string

@@ -143,3 +143,45 @@ export function cinemaSeatGeometry() {
   g.computeBoundingSphere()
   return g
 }
+
+/** Economy airline seat (tall back with headrest, one armrest), facing +Z. */
+export function airlineSeatGeometry(width = 0.44) {
+  const w = width * 0.9
+  const pan = new THREE.BoxGeometry(w, 0.1, 0.46)
+  pan.translate(0, 0.45, 0.02)
+  const back = new THREE.BoxGeometry(w, 0.74, 0.1)
+  back.rotateX(-0.12)
+  back.translate(0, 0.86, -0.24)
+  const head = new THREE.BoxGeometry(w * 0.82, 0.16, 0.13)
+  head.translate(0, 1.24, -0.29)
+  const arm = new THREE.BoxGeometry(0.045, 0.06, 0.44)
+  arm.translate(-width / 2, 0.66, 0)
+  const leg = new THREE.BoxGeometry(w * 0.8, 0.4, 0.06)
+  leg.translate(0, 0.2, -0.05)
+  const g = mergeGeometries([pan, back, head, arm, leg])!
+  g.computeBoundingSphere()
+  return g
+}
+
+/** First-class suite: lie-flat seat inside a shell with privacy walls, facing +Z. */
+export function suiteGeometry(width = 0.74) {
+  const seat = new THREE.BoxGeometry(width * 0.78, 0.16, 0.7)
+  seat.translate(0, 0.46, -0.2)
+  const back = new THREE.BoxGeometry(width * 0.78, 0.85, 0.14)
+  back.rotateX(-0.2)
+  back.translate(0, 0.95, -0.6)
+  const ottoman = new THREE.BoxGeometry(width * 0.6, 0.42, 0.42)
+  ottoman.translate(0, 0.21, 0.72)
+  const parts = [seat, back, ottoman]
+  for (const x of [-width / 2, width / 2]) {
+    const wall = new THREE.BoxGeometry(0.05, 1.15, 1.75)
+    wall.translate(x, 0.58, 0.05)
+    parts.push(wall)
+  }
+  const console_ = new THREE.BoxGeometry(width * 0.25, 0.62, 0.5)
+  console_.translate(width * 0.3, 0.31, 0.25)
+  parts.push(console_)
+  const g = mergeGeometries(parts)!
+  g.computeBoundingSphere()
+  return g
+}

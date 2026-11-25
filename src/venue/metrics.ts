@@ -7,15 +7,46 @@ export interface Metric {
   id: string
   label: string
   value: number
-  unit: 'm' | '°'
+  unit: 'm' | '°' | 'in'
   /** Which direction is better when comparing seats. */
   better: 'low' | 'high' | 'none'
+  /** Text shown instead of the number, e.g. "Private suite". */
+  display?: string
 }
 
-export const formatMetric = (m: Metric) => `${Math.round(m.value)}${m.unit === 'm' ? ' m' : '°'}`
+export const formatMetric = (m: Metric) =>
+  m.display ?? (m.unit === 'in' ? `${+m.value.toFixed(1)} in` : `${Math.round(m.value)}${m.unit === 'm' ? ' m' : '°'}`)
+
+/** Short badges describing an aircraft seat. */
+export function seatBadges(seat: Seat): string[] {
+  const a = seat.aircraft
+  if (!a) return []
+  const out = [a.place === 'window' ? 'Window' : a.place === 'aisle' ? 'Aisle' : 'Middle seat']
+  if (a.suite) out.push('Lie-flat suite')
+  if (a.suite || a.place !== 'middle') out.push('Direct aisle access')
+  if (a.exitRow) out.push('Exit row')
+  if (a.bulkhead) out.push('Bulkhead (wall in front)')
+  if (a.overWing && a.place === 'window') out.push('Wing in view')
+  return out
+}
 
 /** The three headline numbers shown on the seat card, per venue type. */
 export function seatMetrics(seat: Seat, venue: Venue): Metric[] {
+  const a = seat.aircraft
+  if (venue.kind === 'aircraft' && a) {
+    return [
+      { id: 'legroom', label: 'legroom (seat pitch)', value: a.pitchIn, unit: 'in', better: 'high' },
+      { id: 'width', label: 'seat width', value: a.widthIn, unit: 'in', better: 'high' },
+      {
+        id: 'neighbour',
+        label: a.suite ? 'privacy divider' : a.neighbours === 2 ? 'armrests, shared both sides' : 'armrest to your neighbour',
+        value: a.suite ? 99 : a.armrestIn - a.neighbours,
+        unit: 'in',
+        better: 'high',
+        display: a.suite ? 'Private' : a.neighbours === 0 ? 'No one' : `${a.armrestIn} in`,
+      },
+    ]
+  }
   if (venue.kind === 'cinema' && venue.focus.screen) {
     const sc = venue.focus.screen
     const horiz = Math.abs(seat.eye[2] - sc.center[2])
@@ -60,7 +91,15 @@ export function sectorAvailability(sector: Sector) {
  */
 export function viewScore(seat: Seat, venue: Venue): { score: number; label: string } {
   let penalty = 0
-  if (venue.kind === 'cinema' && venue.focus.screen) {
+  const a = seat.aircraft
+  if (venue.kind === 'aircraft' && a) {
+    // legroom matters most, then where you sit in the row
+    penalty += Math.max(0, 40 - a.pitchIn) * 2.2
+    penalty += Math.max(0, 21 - a.widthIn) * 2.5
+    penalty += a.place === 'middle' ? 12 : a.place === 'aisle' ? 3 : 0
+    penalty += a.neighbours * 3
+    if (a.suite) penalty -= 30
+  } else if (venue.kind === 'cinema' && venue.focus.screen) {
     const sc = venue.focus.screen
     const horiz = Math.abs(seat.eye[2] - sc.center[2])
     const angle = 2 * Math.atan(sc.width / 2 / horiz) * DEG

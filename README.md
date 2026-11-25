@@ -107,6 +107,33 @@ A venue is stored as plain JSON (`StadiumConfig` in `src/venue/stadium.ts` or `C
 facing direction and eye point. That is why every seat automatically gets its own view and why the admin editor
 only has to edit numbers. Venues and events live in `src/services/catalog.ts`.
 
+## What works (Phase 4: plane seats)
+
+- **Flight Lahore → London** (`/event/evt-flight-sv785`) on a fictional wide-body, *SeatView Air*.
+- **Bird's-eye view, then the roof opens**: the plane is shown from above, flying over moving clouds, then
+  the roof swings open like a clamshell so you can see every seat inside. It closes again when you sit down.
+- **Cabins**: First (4 rows of 1-2-1 lie-flat suites) and Economy (30 rows of 3-3-3). The two exit rows (26-27)
+  have extra legroom and their own price tier. Row 13 is skipped, as airlines do.
+- **Seat views**: window seats look out of a real framed window at the sky, clouds, engine and wing (over-wing
+  rows). Aisle and middle seats look down the cabin. Drag to look around.
+- **Comfort read-out for every seat**: legroom (seat pitch, in inches), seat width, and space to your neighbour
+  (shared armrest width, or "Private" for suites). Badges show Window / Middle / Aisle, direct aisle access,
+  exit row, bulkhead and "wing in view". A **top-down seat diagram** shows the seat in front with the legroom
+  measured, your width, and what is on each side of you (neighbour, aisle, window or privacy divider).
+- Tickets for flights print as a **boarding pass** (seat 23A, row, class, zone).
+- The admin **Venue layouts** tab can edit the plane: cabins, seat layout (e.g. 3-3-3), rows, pitch, width and
+  exit rows, with a live seat plan.
+- Tests in `src/venue/aircraft.test.ts` check the seat count, row 13 skipped, window/middle/aisle,
+  exit-row legroom and pricing, and the comfort numbers.
+
+## Day and night stadium
+
+The stadium has a **Day / Night** button in the top bar (remembered per browser).
+- **Day**: sunlight with shadows, blue sky.
+- **Night**: a floodlit evening match. Starry sky, four floodlight banks on the roof corners aimed at the pitch,
+  a glowing floodlight ring along the roof edge, lit windows in the city, street lights along the roads, and a
+  soft glow (bloom) effect. Works in the overview, block view and the view from every seat.
+
 ## Coming next
 
 1. Deploy to Vercel (`vercel.json` already sets up the page routes)

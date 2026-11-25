@@ -28,6 +28,26 @@ export interface Seat {
   eye: Vec3
   accessible: boolean
   status: SeatStatus
+  /** Short display name when the venue uses one, e.g. "23A" on a plane. */
+  label?: string
+  /** Where to look by default from this seat (otherwise the venue decides). */
+  look?: Vec3
+  /** Comfort details for aircraft seats. */
+  aircraft?: AircraftSeatInfo
+}
+
+export interface AircraftSeatInfo {
+  place: 'window' | 'middle' | 'aisle'
+  /** Seat pitch (distance to the seat in front) in inches. */
+  pitchIn: number
+  widthIn: number
+  /** Width of the armrest / divider between you and your neighbour, in inches. */
+  armrestIn: number
+  neighbours: number
+  suite: boolean
+  overWing: boolean
+  exitRow: boolean
+  bulkhead: boolean
 }
 
 export interface Sector {
@@ -70,13 +90,15 @@ export interface VenueEvent {
   competition: string
 }
 
-export type VenueKind = 'stadium' | 'cinema'
+export type VenueKind = 'stadium' | 'cinema' | 'aircraft'
 
 export interface VenueView {
   /** Camera for the establishing shot. */
   overview: { position: Vec3; target: Vec3; minDistance: number; maxDistance: number; maxPolar: number }
   /** Default near/far framing distance for a sector close-up. */
   sectorDistance: number
+  /** Fixed camera offset from a sector's centre (overrides the default framing). */
+  sectorOffset?: Vec3
 }
 
 export interface VenueTerms {

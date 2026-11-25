@@ -64,6 +64,9 @@ interface State {
   statusVersion: number
   ready: boolean
   eventId: string
+  /** Stadium lighting: day or night (floodlights). */
+  night: boolean
+  toggleNight: () => void
   /** The seat this customer is currently holding (checkout timer). */
   myHold: { seatId: string; expiresAt: number } | null
   liveViewers: number
@@ -104,6 +107,22 @@ export const useStore = create<State>((set, get) => ({
   statusVersion: 0,
   ready: false,
   eventId: firstEvent.id,
+  night: (() => {
+    try {
+      return localStorage.getItem('sv:night') === '1'
+    } catch {
+      return false
+    }
+  })(),
+  toggleNight: () =>
+    set((s) => {
+      try {
+        localStorage.setItem('sv:night', s.night ? '0' : '1')
+      } catch {
+        /* per-viewer preference only */
+      }
+      return { night: !s.night }
+    }),
   myHold: null,
   liveViewers: 1,
   cameraSettled: false,

@@ -4,8 +4,9 @@ import { Accessibility, Check, Columns3, Eye, Hand, Loader2, MousePointerClick, 
 import { captureSettledView } from '../scene/Capture'
 import { announce, backend, holderId } from '../services/live'
 import { getSeat, getSector, tierOf, useStore, venueModel } from '../state/store'
-import { formatPrice } from '../venue/format'
-import { formatMetric, sectorAvailability, seatMetrics } from '../venue/metrics'
+import { formatPrice, seatName } from '../venue/format'
+import { formatMetric, seatBadges, sectorAvailability, seatMetrics } from '../venue/metrics'
+import { SeatDiagram } from './SeatDiagram'
 
 
 function Stepper({ step }: { step: number }) {
@@ -206,7 +207,7 @@ function SeatCard() {
         )}
       </div>
       <div className="mt-1 font-display text-[22px] font-semibold leading-tight tabular">
-        {sector.label}, Row {seat.rowLabel}, Seat {seat.number}
+        {sector.label}, {seatName(seat)}
       </div>
       <div className="text-[13px] text-muted">
         {ring.name} · {formatPrice(tier.price)}
@@ -216,6 +217,20 @@ function SeatCard() {
           <Stat key={x.id} value={formatMetric(x)} label={x.label} />
         ))}
       </div>
+      {seat.aircraft && (
+        <div className="mt-3 space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            {seatBadges(seat).map((b) => (
+              <span key={b} className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[11px] text-white/85">
+                {b}
+              </span>
+            ))}
+          </div>
+          <div className="hidden sm:block">
+            <SeatDiagram seat={seat} />
+          </div>
+        </div>
+      )}
       <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
         <button
           onClick={back}

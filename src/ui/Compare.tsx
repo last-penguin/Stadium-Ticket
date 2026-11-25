@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { Columns3, Eye, Sparkles, Trophy, X } from 'lucide-react'
 import { getSeat, getSector, tierOf, useStore, venueModel } from '../state/store'
-import { formatPrice } from '../venue/format'
+import { formatPrice, seatName } from '../venue/format'
 import { formatMetric, seatMetrics, viewScore } from '../venue/metrics'
 import type { Seat } from '../venue/types'
 
@@ -121,7 +121,7 @@ export function CompareView() {
               <div className="mb-4 flex items-center gap-2 rounded-2xl border border-mint/25 bg-mint/10 px-4 py-3 text-[13px]">
                 <Sparkles size={15} className="text-mint" />
                 <span>
-                  Best value: <b>{value.sector.label}, Row {value.seat.rowLabel}, Seat {value.seat.number}</b>, with a view
+                  Best value: <b>{value.sector.label}, {seatName(value.seat)}</b>, with a view
                   score of {value.v.score} for {formatPrice(value.tier.price)}.
                 </span>
               </div>
@@ -152,7 +152,7 @@ export function CompareView() {
                       {i.sector.standName} · {i.ring.shortName}
                     </div>
                     <div className="font-display text-lg font-semibold tabular">
-                      {i.sector.label}, Row {i.seat.rowLabel}, Seat {i.seat.number}
+                      {i.sector.label}, {seatName(i.seat)}
                     </div>
                     <div className="mt-3 flex items-end justify-between">
                       <div>

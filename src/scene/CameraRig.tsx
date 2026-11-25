@@ -15,6 +15,8 @@ export function sectorCamera(sectorId: string, fit = 1) {
   const ring = venueModel.venue.rings[sector.ringIndex]
   const span = ring.rows * ring.rowDepth
   const D = venueModel.venue.view.sectorDistance
+  const fixed = venueModel.venue.view.sectorOffset
+  if (fixed) return { pos: c.clone().add(new THREE.Vector3(...fixed).multiplyScalar(fit)), target: c.clone() }
   const pos = c
     .clone()
     .addScaledVector(out, -(span * 1.6 + D) * fit)
@@ -28,6 +30,7 @@ export function CameraRig() {
   // Portrait screens see less horizontally, so pull the camera back.
   const fit = size.width / size.height < 1 ? Math.min(2.1, 1 / (size.width / size.height) ** 0.9) : 1
   const lastInteraction = useRef(performance.now())
+  if (import.meta.env.DEV) Object.assign(window, { __camera: camera })
   const token = useRef(0)
 
   const mode = useStore((s) => s.mode)
@@ -83,7 +86,9 @@ export function CameraRig() {
       const eye = new THREE.Vector3(...seat.eye)
       // look toward a point on the pitch between the centre spot and the seat
       const screen = venueModel.venue.focus.screen
-      const look = screen
+      const look = seat.look
+        ? new THREE.Vector3(...seat.look)
+        : screen
         ? new THREE.Vector3(...screen.center)
         : new THREE.Vector3(seat.eye[0] * 0.18, 0, seat.eye[2] * 0.18)
       const dir = look.sub(eye).normalize()
